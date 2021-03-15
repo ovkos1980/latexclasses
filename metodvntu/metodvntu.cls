@@ -37,6 +37,7 @@
 \RequirePackage{pdfpages}
 \RequirePackage{xcntperchap}
 
+
 \DeclareOption*{\PassOptionsToClass{\CurrentOption}{extreport}}
 \ProcessOptions\relax
 
@@ -287,13 +288,17 @@
 %}
 
 
-\IfFileExists{t2aiso.fd}{\newcommand*{\isofnt}{\fontencoding{T2A}\fontfamily{iso}\selectfont\slshape}}
-{\newcommand*{\isofnt}{\sffamily\slshape}} % no "\selectfont" needed here
+%\IfFileExists{t2aiso.fd}{\newcommand*{\isofnt}{\fontencoding{T2A}\fontfamily{iso}\selectfont\slshape}}
+%{\newcommand*{\isofnt}{\sffamily\slshape}} % no "\selectfont" needed here
 
-\IfFileExists{t2agosta.fd}{\newcommand*{\gostfnt}{\fontencoding{T2A}\fontfamily{gosta}\selectfont\slshape}}%
-{\newcommand*{\gostfnt}{\sffamily\slshape}} % no "\selectfont" needed here
+%\IfFileExists{t2agosta.fd}{\newcommand*{\gostfnt}{\fontencoding{T2A}\fontfamily{gosta}\selectfont\slshape}}%
+%{\newcommand*{\gostfnt}{\sffamily\slshape}} % no "\selectfont" needed here
 
-
+\IfFileExists{t2aiso.fd}{
+    \newcommand*{\gostfnt}{\fontencoding{T2A}\fontfamily{iso}\selectfont\slshape}
+}{
+    \newcommand*{\gostfnt}{\sffamily\slshape} % no "\selectfont" needed here
+}
 
 %--------------------------------------------------------------------------------------------------------
 % drawings frames ---------------------------------------------------------------------------------------
@@ -592,9 +597,38 @@
 \newcommand{\pgbreakinhibit}{\vspace{50pt}\let\clearpage\relax}
 
 
+\newenvironment{a3paperl}[1]
+{
+\clearpage
+\advance\textwidth\pdfpagewidth
+\pdfpagewidth=2\pdfpagewidth
+\hsize=\textwidth
+\linewidth=\hsize
+\columnwidth=\hsize
+\def\x@offset{21.0}
+#1}
+{\clearpage \pdfpagewidth=\paperwidth \pdfpageheight=\paperheight \ClearShipoutPicture}
+
+\newenvironment{a3paperp}[1]
+{
+\clearpage
+\advance\textwidth 87mm
+%\pdfpagewidth = 297mm \paperwidth = \pdfpagewidth
+\pdfpageheight = 420mm \paperheight = \pdfpageheight
+\hsize=\textwidth
+\linewidth=\hsize
+\columnwidth=\hsize
+\def\x@offset{8.7}
+\def\y@offset{12.3}
+#1}
+{\clearpage \pdfpagewidth=210mm \pdfpageheight=297mm \ClearShipoutPicture}
+
+
+
+
 
 %define \paper{} command for different formats of paper
-\@namedef{paper@A4}{ \clearpage%
+\@namedef{paper@A4}{\clearpage%
                 \pdfpagewidth = 210mm \paperwidth = \pdfpagewidth% set page weight
                 \pdfpageheight = 297mm \paperheight = \pdfpageheight% set page height
                 \textwidth = \dimexpr \pdfpagewidth - \Gm@lmargin - \Gm@rmargin% set new textwidth 
@@ -604,7 +638,7 @@
                 \def\x@offset{0.0}% x@offset = pagewidth-210mm (for frame draw need)
                 \def\y@offset{0.0}% y@offset = pageheight-297mm (for frame draw need)
                 \designhm}
-\@namedef{paper@A3}{ \clearpage%
+\@namedef{paper@A3}{\clearpage%
                 \pdfpagewidth = 420mm \paperwidth = \pdfpagewidth
                 \pdfpageheight = 297mm \paperheight = \pdfpageheight
                 \textwidth = \dimexpr \pdfpagewidth - \Gm@lmargin - \Gm@rmargin
@@ -718,19 +752,21 @@
    \fi
   }
 
-\newenvironment{drawing}[1][A3]% \paper{3} as default value for #1
+\newenvironment{drawing}[1][A3]%\paper{3} as default value for #1
  {\isdrwapx
-  \newgeometry{top=1cm,bottom=1cm,right=1cm,left=2.5cm,layoutvoffset=0.5cm}\pagestyle{empty}
+  \newgeometry{top=1cm,bottom=1cm,right=1cm,left=2.5cm,layoutvoffset=0.5cm}
+  \pagestyle{empty}
   \ClearShipoutPicture% Just in case there are any leftovers
   %\apx@environmenttrue
   \drw@firstbackgroundtrue
   \refstepcounter{tcnt}
   \setcounter{fcnt}{\thepage}
-%  \clearpage
+  %\clearpage
   \AddToShipoutPicture{\drw@background}
   \paper{#1}
  }
- {\paper{A4}
+ {
+  \paper{A4}
   \clearpage
   \refstepcounter{tcnt}%
   \pagestyle{plain}%
@@ -738,7 +774,7 @@
   \ClearShipoutPicture
   \istxtapx
   %\apx@environmentfalse
-  \restoregeometry
+  %\restoregeometry % reset page margins
   %\clearpage
  }
 
@@ -1091,7 +1127,7 @@
      \addtocontents{lot}{\protect\addvspace{10\p@}}%
      \if@eltapx%
        \element{}{}{}{\centering\@chapapp\space\thechapter}
-       %\category{#1}
+%       \category{#1}
      \else
        \@makechapterhead{#2}%
        \@afterheading
@@ -1200,118 +1236,42 @@
 
 %%%% \@makechapterhead redefinition ---------------------------------------------------------------------------
 %%%% command which handle `no asterisk` chapter appearing in main text ----------------------------------------
-%\def\@makechapterhead#1{%
-%   \begin{center} 
-%    \parindent \z@% \normalfont
-%    \ifnum \c@secnumdepth >\m@ne
-%      \if@mainmatter 
-%        \thechapter\hspace{1.0ex} 
-%      \else \@chapapp\space 
-%        \thechapter\space\par\nobreak 
-%      \fi
-%      \nobreak 
-%    \fi
-%    \interlinepenalty\@M
-%    \if@mainmatter
-%      \advance\leftskip 2.5em
-%      \advance\rightskip 2.5em
-%      \MakeUppercase{#1}\par\nobreak
-%    \else {#1}\par\nobreak
-%    \fi
-%    \vskip 20\p@
-%   \end{center}}
-
-
-%\def\@makechapterhead#1{%
-%  \if@mainmatter
-%   \begin{center} 
-%     \parindent \z@% \normalfont
-%     \ifnum \c@secnumdepth >\m@ne
-%       \thechapter\hspace{1.0ex} 
-%       \nobreak 
-%     \fi
-%     \interlinepenalty\@M
-%     \advance\leftskip 2.5em
-%     \advance\rightskip 2.5em
-%     \MakeUppercase{#1}\par\nobreak
-%     \vskip 20\p@
-%   \end{center}
-%  \else \if@drawing% if drawing appendix
-%         \begin{flushright}
-%          \parindent \z@% \normalfont
-%          \ifnum \c@secnumdepth >\m@ne
-%            \@chapapp\space 
-%            \thechapter\space\par\nobreak 
-%            \nobreak 
-%          \fi
-%            \interlinepenalty\@M
-%            {#1}\par\nobreak
-%            \vskip 20\p@
-%         \end{flushright}   
-%        \else % if text appendix 
-%         \begin{center}
-%          \parindent \z@% \normalfont
-%          \ifnum \c@secnumdepth >\m@ne
-%            \@chapapp\space 
-%            \thechapter\space\par\nobreak 
-%            \nobreak 
-%         \fi
-%            \interlinepenalty\@M
-%            {#1}\par\nobreak
-%            \vskip 20\p@
-%         \end{center}
-%        \fi 
-%  \fi}
-  
 \def\@makechapterhead#1{%
-  \if@mainmatter
-   \begin{center} 
-     \parindent \z@% \normalfont
-     \ifnum \c@secnumdepth >\m@ne
-       \thechapter\hspace{1.0ex} 
-       \nobreak 
-     \fi
-     \interlinepenalty\@M
-     \advance\leftskip 2.5em
-     \advance\rightskip 2.5em
-     \MakeUppercase{#1}\par\nobreak
-     \vskip 20\p@
-   \end{center}
-  \else \if@drwapx% if drawing appendix
-         \begin{flushright}
-          \parindent \z@% \normalfont
-          \ifnum \c@secnumdepth >\m@ne
-            \gostfnt{\@chapapp\space\thechapter\hspace{2cm}\nobreak} 
-            %\@chapapp\space
-            %\thechapter\space\par\nobreak 
-            %\nobreak 
-          \fi
-            \interlinepenalty\@M
-            {#1}\par\nobreak
-            \vskip 20\p@
-         \end{flushright}   
-        \fi
-        \if@txtapx % if text appendix 
-         \begin{center}
-          \parindent \z@% \normalfont
-          \ifnum \c@secnumdepth >\m@ne
-            \@chapapp\space 
-            \thechapter\space\par\nobreak 
-            \nobreak 
-         \fi
-            \interlinepenalty\@M
-            {#1}\par\nobreak
-            \vskip 20\p@
-         \end{center}
-        \fi
+  \if@mainmatter{%main part of work
+    \parindent \z@ \centering \normalfont
+    \ifnum \c@secnumdepth >\m@ne
+      \thechapter\hspace{1.0ex}
+    \fi
+      \interlinepenalty\@M
+      \MakeUppercase{#1}\par\nobreak
+      \vskip 30\p@}
+  \else%appendix part of work
+  \if@drwapx{%if appendix is drawing
+      \parindent \z@ \centering \normalfont
+      \ifnum \c@secnumdepth >\m@ne
+        \gostfnt{\@chapapp\space\thechapter\hspace{2cm}\nobreak} 
+      \fi
+        \interlinepenalty\@M
+        {#1}\par\nobreak
+        \vskip 30\p@}
+  \fi%end drawing appendix chapter
+  \if@txtapx{%if appendix is text 
+      \parindent \z@ \centering% \normalfont
+      \ifnum \c@secnumdepth >\m@ne
+        \@chapapp\space 
+        \thechapter\space\par\nobreak 
+        \nobreak 
+      \fi
+        \interlinepenalty\@M
+        {#1}\par\nobreak
+        \vskip 30\p@}
+  \fi%end text appendix chapter
         %\if@eltapx % if elementlist appendix 
           %\category{\@chapapp\space\thechapter}
           %do nothing
         %\fi
-  \fi}  
+  \fi}%else fi  
   
-  
-   
 
 %%%% \@makeschapterhead redefinition --------------------------------------------------------------------------
 %%%% command which handle `asterisk` chapter appearing in main text -------------------------------------------
@@ -1320,7 +1280,8 @@
   {\parindent \z@ \centering %\normalfont
     \interlinepenalty \@M
     \MakeUppercase{#1} \par\nobreak
-    \vskip 20\p@}}
+    %\vskip 20\p@
+    \vskip 30\p@}}
 
 
 
@@ -1403,15 +1364,26 @@
   \fi
   \ignorespaces}
 
+%redefinition \section command (http://latexref.xyz/bs-at-startsection.html)
+\renewcommand\section{%
+  \@startsection{section}%name
+                {1}%level
+                {\parindent}%indent
+                %{4.5ex \@plus 1ex \@minus .2ex}%beforeskip
+                {3.5ex \@plus 1ex \@minus .2ex}%beforeskip
+                %{4.5ex \@plus .2ex}%afterskip
+                {3.5ex \@plus .2ex}%afterskip
+                {}}%style
 
-\renewcommand\section{\@startsection{section}{1}{\parindent}%
-                                    {4.5ex \@plus 1ex \@minus .2ex}%
-                                    {4.5ex \@plus .2ex}%
-                                    {}}
-\renewcommand\subsection{\@startsection{subsection}{2}{\parindent}%
-                                    {4.5ex \@plus 1ex \@minus .2ex}%
-                                    {4.5ex \@plus .2ex}%
-                                    {}}
+\renewcommand\subsection{%
+  \@startsection{subsection}%name
+                {2}%level
+                {\parindent}%indent
+                %{4.5ex \@plus 1ex \@minus .2ex}%beforeskip
+                {3.5ex \@plus 1ex \@minus .2ex}%beforeskip
+                %{4.5ex \@plus .2ex}%afterskip
+                {3.5ex \@plus .2ex}%afterskip
+                {}}%style
 
 \renewcommand*\l@section[2]{\ifnum \c@tocdepth >\m@ne
     \vskip \z@ \@plus.2\p@
